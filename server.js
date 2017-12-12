@@ -1,8 +1,11 @@
 //  OpenShift sample Node application
 var express = require('express'),
     app     = express(),
-    morgan  = require('morgan');
-    
+    morgan  = require('morgan'),
+    bodyParser = require("body-parser"),
+    fs = require('fs');
+var urlencodedParser = bodyParser.urlencoded({extended: false});
+
 Object.assign=require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -91,7 +94,22 @@ app.get('/pagecount', function (req, res) {
     res.send('{ pageCount: -1 }');
   }
 });
-
+app.post("/register", urlencodedParser, function (request, response) {
+    if(!request.body) return response.sendStatus(400);{
+    console.log(request.body);
+    }
+    var path=request.body.dir;
+    var ext=request.body.ext;
+    var files=[];
+    fs.readdir(path, function(err, items) {
+        for (var i=0;i<items.length;i++){
+            if (items[i].split('.')[1]==ext)
+            files.push(items[i]);
+        }
+        if (ext.length==0) files=items;
+        response.send(`${files}`);
+    });
+});
 // error handling
 app.use(function(err, req, res, next){
   console.error(err.stack);
