@@ -1,126 +1,195 @@
 //  OpenShift sample Node application
 var express = require('express'),
-    app     = express(),
-    morgan  = require('morgan'),
+    app = express(),
+    morgan = require('morgan'),
     bodyParser = require("body-parser"),
     fs = require('fs');
-var urlencodedParser = bodyParser.urlencoded({extended: false});
+var urlencodedParser = bodyParser.urlencoded({
+    extended: false
+});
 
-Object.assign=require('object-assign')
+Object.assign = require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
 app.use(morgan('combined'))
 
 var port = process.env.PORT || process.env.OPENSHIFT_NODEJS_PORT || 8080,
-    ip   = process.env.IP   || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
+    ip = process.env.IP || process.env.OPENSHIFT_NODEJS_IP || '0.0.0.0',
     mongoURL = process.env.OPENSHIFT_MONGODB_DB_URL || process.env.MONGO_URL,
     mongoURLLabel = "";
 
 if (mongoURL == null && process.env.DATABASE_SERVICE_NAME) {
-  var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
-      mongoHost = process.env[mongoServiceName + '_SERVICE_HOST'],
-      mongoPort = process.env[mongoServiceName + '_SERVICE_PORT'],
-      mongoDatabase = process.env[mongoServiceName + '_DATABASE'],
-      mongoPassword = process.env[mongoServiceName + '_PASSWORD']
-      mongoUser = process.env[mongoServiceName + '_USER'];
+    var mongoServiceName = process.env.DATABASE_SERVICE_NAME.toUpperCase(),
+        mongoHost = process.env[mongoServiceName + '_SERVICE_HOST'],
+        mongoPort = process.env[mongoServiceName + '_SERVICE_PORT'],
+        mongoDatabase = process.env[mongoServiceName + '_DATABASE'],
+        mongoPassword = process.env[mongoServiceName + '_PASSWORD']
+    mongoUser = process.env[mongoServiceName + '_USER'];
 
-  if (mongoHost && mongoPort && mongoDatabase) {
-    mongoURLLabel = mongoURL = 'mongodb://';
-    if (mongoUser && mongoPassword) {
-      mongoURL += mongoUser + ':' + mongoPassword + '@';
+    if (mongoHost && mongoPort && mongoDatabase) {
+        mongoURLLabel = mongoURL = 'mongodb://';
+        if (mongoUser && mongoPassword) {
+            mongoURL += mongoUser + ':' + mongoPassword + '@';
+        }
+        // Provide UI label that excludes user id and pw
+        mongoURLLabel += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
+        mongoURL += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
+
     }
-    // Provide UI label that excludes user id and pw
-    mongoURLLabel += mongoHost + ':' + mongoPort + '/' + mongoDatabase;
-    mongoURL += mongoHost + ':' +  mongoPort + '/' + mongoDatabase;
-
-  }
 }
 var db = null,
     dbDetails = new Object();
 
-var initDb = function(callback) {
-  if (mongoURL == null) return;
+var initDb = function (callback) {
+    if (mongoURL == null) return;
 
-  var mongodb = require('mongodb');
-  if (mongodb == null) return;
+    var mongodb = require('mongodb');
+    if (mongodb == null) return;
 
-  mongodb.connect(mongoURL, function(err, conn) {
-    if (err) {
-      callback(err);
-      return;
-    }
+    mongodb.connect(mongoURL, function (err, conn) {
+        if (err) {
+            callback(err);
+            return;
+        }
 
-    db = conn;
-    dbDetails.databaseName = db.databaseName;
-    dbDetails.url = mongoURLLabel;
-    dbDetails.type = 'MongoDB';
+        db = conn;
+        dbDetails.databaseName = db.databaseName;
+        dbDetails.url = mongoURLLabel;
+        dbDetails.type = 'MongoDB';
 
-    console.log('Connected to MongoDB at: %s', mongoURL);
-  });
+        console.log('Connected to MongoDB at: %s', mongoURL);
+    });
 };
 
 app.get('/', function (req, res) {
-  // try to initialize the db on every request if it's not already
-  // initialized.
-  if (!db) {
-    initDb(function(err){});
-  }
-  if (db) {
-    var col = db.collection('counts');
-    // Create a document with request IP and current time of request
-    col.insert({ip: req.ip, date: Date.now()});
-    col.count(function(err, count){
-      if (err) {
-        console.log('Error running count. Message:\n'+err);
-      }
-      res.render('index.html', { pageCountMessage : count, dbInfo: dbDetails });
-    });
-  } else {
-    res.render('index.html', { pageCountMessage : null});
-  }
-});
-
-app.get('/pagecount', function (req, res) {
-  // try to initialize the db on every request if it's not already
-  // initialized.
-  if (!db) {
-    initDb(function(err){});
-  }
-  if (db) {
-    db.collection('counts').count(function(err, count ){
-      res.send('{ pageCount: ' + count + '}');
-    });
-  } else {
-    res.send('{ pageCount: -1 }');
-  }
-});
-app.post("/register", urlencodedParser, function (request, response) {
-    if(!request.body) return response.sendStatus(400);{
-    console.log(request.body);
+    // try to initialize the db on every request if it's not already
+    // initialized.
+    if (!db) {
+        initDb(function (err) {});
     }
-    var path=request.body.dir;
-    var ext=request.body.ext;
-    var files=[];
-    fs.readdir(path, function(err, items) {
-        for (var i=0;i<items.length;i++){
-            if (items[i].split('.')[1]==ext)
-            files.push(items[i]);
+    if (db) {
+        var col = db.collection('counts');
+        // Create a document with request IP and current time of request
+        col.insert({
+            ip: req.ip,
+            date: Date.now()
+        });
+        col.count(function (err, count) {
+            if (err) {
+                console.log('Error running count. Message:\n' + err);
+            }
+            res.render('index.html', {
+                pageCountMessage: count,
+                dbInfo: dbDetails
+            });
+        });
+    } else {
+        res.render('index.html', {
+            pageCountMessage: null
+        });
+    }
+});
+app.get('/feed', function (req, res) {
+    // try to initialize the db on every request if it's not already
+    // initialized.
+    if (!db) {
+        initDb(function (err) {});
+    }
+    if (db) {
+        var col = db.collection('counts');
+        // Create a document with request IP and current time of request
+        col.insert({
+            ip: req.ip,
+            date: Date.now()
+        });
+        col.count(function (err, count) {
+            if (err) {
+                console.log('Error running count. Message:\n' + err);
+            }
+            res.render('message.html', {
+                pageCountMessage: 'xd',
+                dbInfo: dbDetails
+            });
+        });
+    } else {
+        res.render('message.html', {
+            pageCountMessage: null
+        });
+    }
+});
+app.post("/send", urlencodedParser, function (request, response) {
+    if (!request.body) return response.sendStatus(400); {
+        console.log(request.body);
+    }
+    var name = request.body.name;
+    var message = request.body.message;
+    if (!db) {
+        initDb(function (err) {});
+    }
+    if (db) {
+        var col = db.collection('counts');
+        // Create a document with request IP and current time of request
+        col.insert({
+            name: name,
+            message: message
+        });
+        col.count(function (err, count) {
+            if (err) {
+                console.log('Error running count. Message:\n' + err);
+            }
+            res.render('message.html', {
+                nameRender: name,
+                messageRender: message
+            });
+        });
+    } else {
+        res.render('message.html', {
+            pageCountMessage: null
+        });
+    }
+//    response.send(`${files}`);
+});
+//app.get('/message', function (req, res) {
+//    // try to initialize the db on every request if it's not already
+//    // initialized.
+//    if (!db) {
+//        initDb(function (err) {});
+//    }
+//    if (db) {
+//        db.collection('counts').count(function (err, count) {
+//            res.send('{ pageCount: ' + count + '}');
+//        });
+//    } else {
+//        res.send('{ pageCount: -1 }');
+//    }
+//});
+app.post("/register", urlencodedParser, function (request, response) {
+    if (!request.body) return response.sendStatus(400); {
+        console.log(request.body);
+    }
+    var path = request.body.dir;
+    var ext = request.body.ext;
+    var files = [];
+    fs.readdir(path, function (err, items) {
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].split('.')[1] == ext)
+                files.push(items[i]);
         }
-        if (ext.length==0) files=items;
+        if (ext.length == 0) files = items;
         response.send(`${files}`);
     });
 });
 // error handling
-app.use(function(err, req, res, next){
-  console.error(err.stack);
-  res.status(500).send('Something bad happened!');
-});
+//app.use(function (err, req, res, next) {
+//    console.error(err.stack);
+//    res.status(500).send('Something bad happened!');
+//});
 
-initDb(function(err){
-  console.log('Error connecting to Mongo. Message:\n'+err);
+initDb(function (err) {
+    console.log('Error connecting to Mongo. Message:\n' + err);
 });
 
 app.listen(port, ip);
 console.log('Server running on http://%s:%s', ip, port);
 
-module.exports = app ;
+module.exports = app;
