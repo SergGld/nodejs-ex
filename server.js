@@ -74,12 +74,16 @@ app.get('/', function (req, res) {
             ip: req.ip,
             date: Date.now()
         });
+         var collection = db.collection('counts').find().limit(10).toArray(function(err, docs) {
+    console.dir(docs);
+    db.close();
+  });
         col.count(function (err, count) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
             }
             res.render('index.html', {
-                pageCountMessage: col.date,
+                pageCountMessage: collection,
                 dbInfo: dbDetails
             });
         });
