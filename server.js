@@ -74,10 +74,7 @@ app.get('/', function (req, res) {
             ip: req.ip,
             date: Date.now()
         });
-         var collection = db.collection('counts').find({}).toArray(function(err, docs) {
-    console.dir(docs);
-  });
-    
+         var collection = db.collection('counts').find();
         col.count(function (err, count) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
@@ -89,7 +86,7 @@ app.get('/', function (req, res) {
         });
     } else {
         res.render('index.html', {
-            pageCountMessage: null
+            pageCountMessage: 'elsed'
         });
     }
 });
