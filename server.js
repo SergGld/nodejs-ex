@@ -79,7 +79,7 @@ app.get('/', function (req, res) {
                 console.log('Error running count. Message:\n' + err);
             }
             res.render('index.html', {
-                pageCountMessage: count,
+                pageCountMessage: col.date,
                 dbInfo: dbDetails
             });
         });
