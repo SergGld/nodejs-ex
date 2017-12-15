@@ -74,10 +74,10 @@ app.get('/', function (req, res) {
             ip: req.ip,
             date: Date.now()
         });
-         var collection = db.collection('counts').find().limit(10).toArray(function(err, docs) {
+         var collection = db.collection('counts').find({}).toArray(function(err, docs) {
     console.dir(docs);
-    db.close();
   });
+        aler(collection);
         col.count(function (err, count) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
@@ -103,8 +103,8 @@ app.get('/feed', function (req, res) {
         var col = db.collection('counts');
         // Create a document with request IP and current time of request
         col.insert({
-            ip: req.ip,
-            date: Date.now()
+            name: 'Сергей',
+            message: 'привет'
         });
         col.count(function (err, count) {
             if (err) {
