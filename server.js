@@ -99,8 +99,8 @@ app.get('/feed', function (req, res) {
         var col = db.collection('counts');
         // Create a document with request IP and current time of request
         col.insert({
-            name: 'Serg',
-            message: 'hello'
+            ip: req.ip,
+            date: Date.now()
         });
         col.count(function (err, count) {
             if (err) {
@@ -113,7 +113,7 @@ app.get('/feed', function (req, res) {
         });
     } else {
         res.render('message.html', {
-            nameRender: null,
+            nameRender: 'ddd',
             messageRender: null
         });
     }
