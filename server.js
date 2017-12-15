@@ -77,7 +77,7 @@ app.get('/', function (req, res) {
          var collection = db.collection('counts').find({}).toArray(function(err, docs) {
     console.dir(docs);
   });
-        aler(collection);
+        alert(collection);
         col.count(function (err, count) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
