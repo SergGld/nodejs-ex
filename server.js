@@ -99,21 +99,22 @@ app.get('/feed', function (req, res) {
         var col = db.collection('counts');
         // Create a document with request IP and current time of request
         col.insert({
-            ip: req.ip,
-            date: Date.now()
+            name: 'Serg',
+            message: 'hello'
         });
         col.count(function (err, count) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
             }
             res.render('message.html', {
-                pageCountMessage: 'xd',
-                dbInfo: dbDetails
+                nameRender: 'defaultName',
+                messageRender: 'defaultMessage'
             });
         });
     } else {
         res.render('message.html', {
-            pageCountMessage: null
+            nameRender: null,
+            messageRender: null
         });
     }
 });
@@ -144,7 +145,8 @@ app.post("/send", urlencodedParser, function (request, response) {
         });
     } else {
         response.render('message.html', {
-            pageCountMessage: null
+            nameRender: null,
+            messageRender: null
         });
     }
 //    response.send(`${files}`);
