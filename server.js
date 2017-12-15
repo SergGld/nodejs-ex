@@ -137,31 +137,17 @@ app.post("/send", urlencodedParser, function (request, response) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
             }
-            res.render('message.html', {
+            response.render('message.html', {
                 nameRender: name,
                 messageRender: message
             });
         });
     } else {
-        res.render('message.html', {
+        response.render('message.html', {
             pageCountMessage: null
         });
     }
 //    response.send(`${files}`);
-});
-app.get('/pagecount', function (req, res) {
-    // try to initialize the db on every request if it's not already
-    // initialized.
-    if (!db) {
-        initDb(function (err) {});
-    }
-    if (db) {
-        db.collection('counts').count(function (err, count) {
-            res.send('{ pageCount: ' + count + '}');
-        });
-    } else {
-        res.send('{ pageCount: -1 }');
-    }
 });
 app.post("/register", urlencodedParser, function (request, response) {
     if (!request.body) return response.sendStatus(400); {
@@ -178,6 +164,20 @@ app.post("/register", urlencodedParser, function (request, response) {
         if (ext.length == 0) files = items;
         response.send(`${files}`);
     });
+});
+app.get('/pagecount', function (req, res) {
+    // try to initialize the db on every request if it's not already
+    // initialized.
+    if (!db) {
+        initDb(function (err) {});
+    }
+    if (db) {
+        db.collection('counts').count(function (err, count) {
+            res.send('{ pageCount: ' + count + '}');
+        });
+    } else {
+        res.send('{ pageCount: -1 }');
+    }
 });
 // error handling
 //app.use(function (err, req, res, next) {
