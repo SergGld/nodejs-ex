@@ -426,10 +426,9 @@ app.get('/feed', function (req, res) {
             if (err) {
                 console.log('Error running count. Message:\n' + err);
             }
-            res.render('message.html', {
-                nameRender: 'defaultName',
-                messageRender: 'defaultMessage'
-            });
+            res.setHeader('content-type', 'text/html; charset=utf-8');
+         res.write(htmlPost);  
+        res.end();
         });
     } else {
         res.setHeader('content-type', 'text/html; charset=utf-8');
@@ -460,11 +459,11 @@ app.post("/send", urlencodedParser, function (request, response) {
     obj.post.push({name:name,message:message});
     var json = JSON.stringify(obj);
     fs.writeFile('xd.json', json, 'utf8');
-    response.writeHead(301,
-  {Location: '/feed'}
-);
-response.end();
-    
+//    response.writeHead(301,
+//  {Location: '/feed'}
+//);   
+//response.end();
+    response.redirect("/feed")
     
     
     
