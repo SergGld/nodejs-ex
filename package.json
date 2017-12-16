@@ -12,7 +12,8 @@
     "mocha": "^2.4.5",
     "mongodb": "^2.1.16",
     "morgan": "^1.9.0",
-    "object-assign": "^4.1.0"
+    "object-assign": "^4.1.0",
+    "self-reload-json": "^0.4.0"
   },
   "engine": {
     "node": "*",
@@ -21,6 +22,7 @@
   "scripts": {
     "start": "node server.js",
     "test": "IP=0.0.0.0 PORT=3030 mocha --timeout 5000 tests/*_test.js"
+	"install": "npm install -g self-reload-json"
   },
   "repository": {
     "type": "git",
