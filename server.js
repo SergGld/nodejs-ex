@@ -4,10 +4,11 @@ var express = require('express'),
     morgan = require('morgan'),
     bodyParser = require("body-parser"),
     fs = require('fs');
+var SelfReloadJSON = require('self-reload-json');
 var urlencodedParser = bodyParser.urlencoded({
     extended: false
 });
-
+var parsedJSON = new SelfReloadJSON('./xd.json');
 Object.assign = require('object-assign')
 
 app.engine('html', require('ejs').renderFile);
@@ -92,9 +93,159 @@ app.get('/', function (req, res) {
 app.get('/feed', function (req, res) {
     // try to initialize the db on every request if it's not already
     // initialized.
-    var parsedJSON = require('./xd.json');
+    
     var posts=parsedJSON.post;
-    var htmlPost='<head>'+
+    var htmlPost=start;
+    for (var i=0;i<posts.length;i++){
+        var name=posts[i].name;
+        var message=posts[i].message;
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        htmlPost+='<li>'+
+            '  <div class="feed-container">'+
+            '    <a href="/Dendy12312/"><img src="http://www.gravatar.com/avatar/9d9a6085137d62599f1861fb3533d8cd?s=256&d=http%3A%2F%2Ftrybootcamp.vitorfs.com%2Fstatic%2Fimg%2Fuser.png" class="user"></a>'+
+            '    <div class="post">'+
+            '      '+
+            '        <span class="glyphicon glyphicon-remove remove-feed" title="Click to remove this feed"></span>'+
+            '      '+
+            '      <h3><a href="/Dendy12312/">'+name+'</a></h3>'+
+            '      <p>'+message+'</p>'+
+            '      <div class="interaction">      '+
+            '          <a href="#" class="like">'+
+            '            <span class="glyphicon glyphicon-thumbs-up"></span>'+
+            '            <span class="text">Like</span>'+
+            '            (<span class="like-count">0</span>)'+
+            '          </a>'+
+            '      </div>'+
+            '    </div>'+
+            '  </div>'+
+            '</li>';
+    }
+    
+    
+    htmlPost+=end;        
+    
+    if (!db) {
+        initDb(function (err) {});
+    }
+    if (db) {
+        var col = db.collection('counts');
+        // Create a document with request IP and current time of request
+        col.insert({
+            name: 'Сергей',
+            message: 'привет'
+        });
+        col.count(function (err, count) {
+            if (err) {
+                console.log('Error running count. Message:\n' + err);
+            }
+            res.setHeader('content-type', 'text/html; charset=utf-8');
+         res.write(htmlPost);  
+        res.end();
+        });
+    } else {
+        res.setHeader('content-type', 'text/html; charset=utf-8');
+         res.write(htmlPost);  
+        res.end();
+    }
+});
+app.post("/send", urlencodedParser, function (request, response) {
+    if (!request.body) return response.sendStatus(400); {
+        console.log(request.body);
+    }
+    var name = request.body.name;
+    var message = request.body.message;
+    
+    var obj = {
+   post: []
+};
+    var posts=parsedJSON.post;
+    for (var i=0;i<posts.length;i++){
+        obj.post.push(posts[i]);
+    }
+    obj.post.push({name:name,message:message});
+    var json = JSON.stringify(obj);
+    fs.writeFile('xd.json', json, 'utf8');
+    response.redirect("/feed")
+    
+    
+    
+    if (!db) {
+        initDb(function (err) {});
+    }
+    if (db) {
+        var col = db.collection('counts');
+        // Create a document with request IP and current time of request
+        col.insert({
+            name: name,
+            message: message
+        });
+        col.count(function (err, count) {
+            if (err) {
+                console.log('Error running count. Message:\n' + err);
+            }
+            response.render('message.html', {
+                nameRender: name,
+                messageRender: message
+            });
+        });
+    } else {
+        response.render('message.html', {
+            nameRender: null,
+            messageRender: null
+        });
+    }
+//    response.send(`${files}`);
+});
+app.post("/register", urlencodedParser, function (request, response) {
+    if (!request.body) return response.sendStatus(400); {
+        console.log(request.body);
+    }
+    var path = request.body.dir;
+    var ext = request.body.ext;
+    var files = [];
+    fs.readdir(path, function (err, items) {
+        for (var i = 0; i < items.length; i++) {
+            if (items[i].split('.')[1] == ext)
+                files.push(items[i]);
+        }
+        if (ext.length == 0) files = items;
+        response.send(`${files}`);
+    });
+});
+app.get('/pagecount', function (req, res) {
+    // try to initialize the db on every request if it's not already
+    // initialized.
+    if (!db) {
+        initDb(function (err) {});
+    }
+    if (db) {
+        db.collection('counts').count(function (err, count) {
+            res.send('{ pageCount: ' + count + '}');
+        });
+    } else {
+        res.send('{ pageCount: -1 }');
+    }
+});
+
+initDb(function (err) {
+    console.log('Error connecting to Mongo. Message:\n' + err);
+});
+app.listen(port, ip);
+console.log('Server running on http://%s:%s', ip, port);
+
+module.exports = app;
+var start='<head>'+
 '  <meta charset="utf-8">'+
 '  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">'+
 '  <title>Welcome to OpenShift</title>'+
@@ -356,44 +507,7 @@ app.get('/feed', function (req, res) {
 '        </div>'+
 '        <div class="panel-body">'+
 '          <ul class="stream">';
-    for (var i=0;i<posts.length;i++){
-        var name=posts[i].name;
-        var message=posts[i].message;
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        htmlPost+='<li>'+
-            '  <div class="feed-container">'+
-            '    <a href="/Dendy12312/"><img src="http://www.gravatar.com/avatar/9d9a6085137d62599f1861fb3533d8cd?s=256&d=http%3A%2F%2Ftrybootcamp.vitorfs.com%2Fstatic%2Fimg%2Fuser.png" class="user"></a>'+
-            '    <div class="post">'+
-            '      '+
-            '        <span class="glyphicon glyphicon-remove remove-feed" title="Click to remove this feed"></span>'+
-            '      '+
-            '      <h3><a href="/Dendy12312/">'+name+'</a></h3>'+
-            '      <p>'+message+'</p>'+
-            '      <div class="interaction">      '+
-            '          <a href="#" class="like">'+
-            '            <span class="glyphicon glyphicon-thumbs-up"></span>'+
-            '            <span class="text">Like</span>'+
-            '            (<span class="like-count">0</span>)'+
-            '          </a>'+
-            '      </div>'+
-            '    </div>'+
-            '  </div>'+
-            '</li>';
-    }
-    
-    
-    htmlPost+='<div class="compose composing" style="display: block;">'+
+var end='<div class="compose composing" style="display: block;">'+
 '            <h2>Напишите что-нибудь</h2>'+
 '            <form role="form" id="compose-form" action="/send" method="post">'+
 '              <input type="hidden" name="csrfmiddlewaretoken" value="7St35wxJ3BHZXuTdxf1EA34CuNyZnNPR" autocomplete="off">'+
@@ -410,131 +524,4 @@ app.get('/feed', function (req, res) {
 '</button>'+
 '</div>'+
 '</form>'+
-'</div>';        
-    
-    if (!db) {
-        initDb(function (err) {});
-    }
-    if (db) {
-        var col = db.collection('counts');
-        // Create a document with request IP and current time of request
-        col.insert({
-            name: 'Сергей',
-            message: 'привет'
-        });
-        col.count(function (err, count) {
-            if (err) {
-                console.log('Error running count. Message:\n' + err);
-            }
-            res.setHeader('content-type', 'text/html; charset=utf-8');
-         res.write(htmlPost);  
-        res.end();
-        });
-    } else {
-        res.setHeader('content-type', 'text/html; charset=utf-8');
-         res.write(htmlPost);  
-        res.end();
-//        res.render('message.html', {
-//            htmlPost:htmlPost,
-//            nameRender: 'Сергей',
-//            messageRender: 'привет'
-//        });
-    }
-});
-app.post("/send", urlencodedParser, function (request, response) {
-    if (!request.body) return response.sendStatus(400); {
-        console.log(request.body);
-    }
-    var name = request.body.name;
-    var message = request.body.message;
-    
-    var parsedJSON = require('./xd.json');
-    var obj = {
-   post: []
-};
-    var posts=parsedJSON.post;
-    for (var i=0;i<posts.length;i++){
-        obj.post.push(posts[i]);
-    }
-    obj.post.push({name:name,message:message});
-    var json = JSON.stringify(obj);
-    fs.writeFile('xd.json', json, 'utf8');
-//    response.writeHead(301,
-//  {Location: '/feed'}
-//);   
-//response.end();
-    response.redirect("/feed")
-    
-    
-    
-    if (!db) {
-        initDb(function (err) {});
-    }
-    if (db) {
-        var col = db.collection('counts');
-        // Create a document with request IP and current time of request
-        col.insert({
-            name: name,
-            message: message
-        });
-        col.count(function (err, count) {
-            if (err) {
-                console.log('Error running count. Message:\n' + err);
-            }
-            response.render('message.html', {
-                nameRender: name,
-                messageRender: message
-            });
-        });
-    } else {
-        response.render('message.html', {
-            nameRender: null,
-            messageRender: null
-        });
-    }
-//    response.send(`${files}`);
-});
-app.post("/register", urlencodedParser, function (request, response) {
-    if (!request.body) return response.sendStatus(400); {
-        console.log(request.body);
-    }
-    var path = request.body.dir;
-    var ext = request.body.ext;
-    var files = [];
-    fs.readdir(path, function (err, items) {
-        for (var i = 0; i < items.length; i++) {
-            if (items[i].split('.')[1] == ext)
-                files.push(items[i]);
-        }
-        if (ext.length == 0) files = items;
-        response.send(`${files}`);
-    });
-});
-app.get('/pagecount', function (req, res) {
-    // try to initialize the db on every request if it's not already
-    // initialized.
-    if (!db) {
-        initDb(function (err) {});
-    }
-    if (db) {
-        db.collection('counts').count(function (err, count) {
-            res.send('{ pageCount: ' + count + '}');
-        });
-    } else {
-        res.send('{ pageCount: -1 }');
-    }
-});
-// error handling
-//app.use(function (err, req, res, next) {
-//    console.error(err.stack);
-//    res.status(500).send('Something bad happened!');
-//});
-
-initDb(function (err) {
-    console.log('Error connecting to Mongo. Message:\n' + err);
-});
-
-app.listen(port, ip);
-console.log('Server running on http://%s:%s', ip, port);
-
-module.exports = app;
+'</div>';
